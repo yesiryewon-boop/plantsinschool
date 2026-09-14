@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>영종고 식물 탐험대</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: #eaf5e9; /* 파스텔 그린 배경 */
+            -webkit-tap-highlight-color: transparent;
+            word-break: keep-all; 
+        }
+        /* 숫자 입력란 위아래 화살표(스피너) 제거 */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: #ffffff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .screen {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+        .screen.active {
+            display: flex;
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        input, textarea {
+            transition: all 0.3s ease;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #82c99b;
+            box-shadow: 0 0 0 3px rgba(130, 201, 155, 0.2);
+        }
+
+        /* 커스텀 토스트 메시지 스타일 */
+        #toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background-color: #ffb347;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 99px;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            text-align: center;
+            white-space: nowrap;
+        }
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        #toast.success {
+            background-color: #6ab383; /* 정답 시 초록색 */
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- 토스트 메시지 (alert 대체) -->
+    <div id="toast">알림 메시지</div>
+
+    <!-- 1. 시작 화면 -->
+    <div id="screen-start" class="screen active justify-center items-center">
+        <!-- 가장 먼저 학교 나무 지도 표시 -->
+        <div class="w-full bg-white rounded-2xl shadow-sm border border-green-200 p-2 mb-4">
+            <h2 class="text-center text-green-700 text-xl mb-2 mt-1">🗺️ 우리학교 나무 지도</h2>
+            <img src="https://lh3.googleusercontent.com/d/13KwhoI2-sjta6BFBLozOJTww-dhoOccs" 
+                 alt="우리학교 나무 지도" 
+                 class="w-full h-56 object-contain bg-[#f8fcf9] rounded-xl" 
+                 onerror="this.src='https://placehold.co/800x1200/d1fae5/065f46?text=School+Tree+Map'">
+            <p class="text-right text-gray-500 text-sm mt-2 mr-2">지도 제작: 홍진형 선생님 (협조에 감사드립니다!)</p>
+        </div>
+
+        <div class="text-left w-full mb-4 px-2">
+            <h1 class="text-4xl text-green-600 mb-3 drop-shadow-sm text-center">🌿 영종고 식물 탐험대</h1>
+            <p class="text-gray-600 text-lg leading-snug">우리 학교 교정에는 정말 <strong>다양하고 아름다운 식물</strong>들이 살고 있어요!<br><br>커다란 <strong>나무</strong>뿐만 아니라 작고 예쁜 <strong>풀꽃</strong>들도 곳곳에 숨어있답니다.<br>지도를 살펴보고 퀴즈를 풀어볼까요?</p>
+        </div>
+        
+        <div class="w-full bg-white p-5 rounded-2xl shadow-sm border border-green-200 text-left">
+            <div class="mb-3">
+                <label class="block text-base text-gray-700 mb-1">학번 (5자리 숫자)</label>
+                <input type="number" id="student-id" placeholder="예: 10101" class="w-full p-3 border border-green-200 rounded-xl text-lg focus:border-green-400" pattern="\d{5}">
+            </div>
+            <div class="mb-5">
+                <label class="block text-base text-gray-700 mb-1">이름</label>
+                <input type="text" id="student-name" placeholder="이름을 입력하세요" class="w-full p-3 border border-green-200 rounded-xl text-lg focus:border-green-400">
+            </div>
+            <button onclick="startQuiz()" class="w-full bg-[#82c99b] text-white py-4 rounded-xl shadow-md hover:bg-[#6ab383] active:transform active:scale-95 transition-all text-2xl text-center">
+                탐험 시작하기!
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. 퀴즈 화면 -->
+    <div id="screen-quiz" class="screen relative">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-base text-green-800 bg-green-200 px-4 py-1 rounded-full shadow-sm" id="quiz-progress">1 / 7</span>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-green-200 mb-6 flex-1 flex flex-col text-left">
+            <!-- 사진 높이를 h-56에서 h-72로 키움 (모바일에서 더 크게 보이도록) -->
+            <img id="quiz-image" src="" alt="식물 사진" class="w-full h-72 object-cover bg-gray-100" onerror="this.src='https://placehold.co/600x400/e2e8f0/475569?text=Plant+Image'">
+            <div class="p-5 flex-1 flex flex-col">
+                <div class="flex items-center text-green-600 text-base mb-2">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span id="quiz-location" class="font-bold">위치 정보</span>
+                </div>
+                <p id="quiz-desc" class="text-gray-700 text-lg leading-relaxed mb-4 flex-1">식물 설명이 여기에 들어갑니다.</p>
+                <div class="bg-[#f0f9f4] border border-green-200 rounded-xl p-4 text-center mt-auto">
+                    <span class="text-base text-green-700 mb-1 block">초성 힌트</span>
+                    <span id="quiz-hint" class="text-3xl text-green-800 tracking-widest">ㅎ ㅌ</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-auto pb-4">
+            <input type="text" id="quiz-answer" placeholder="정답을 입력하세요" class="w-full p-4 border-2 border-green-200 rounded-xl text-2xl text-center mb-3 outline-none transition-all">
+            <button onclick="checkAnswer()" class="w-full bg-[#82c99b] text-white py-4 rounded-xl shadow-md hover:bg-[#6ab383] active:transform active:scale-95 transition-all text-2xl">
+                정답 확인
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. 에세이(소감) 화면 -->
+    <div id="screen-essay" class="screen justify-center">
+        <div class="text-center mb-6">
+            <div class="inline-block bg-green-100 p-4 rounded-full mb-4 shadow-sm">
+                <span class="text-5xl">🎉</span>
+            </div>
+            <h2 class="text-3xl text-green-700 mb-2">모든 식물을 찾았어요!</h2>
+            <p class="text-gray-600 text-lg">탐험을 마치며 느낀 소감이나<br>기억에 남는 식물을 자유롭게 적어주세요.</p>
+        </div>
+        
+        <textarea id="essay-text" rows="6" placeholder="여기에 소감을 작성해주세요..." class="w-full p-4 border-2 border-green-200 rounded-xl resize-none mb-6 text-gray-700 text-lg outline-none transition-all"></textarea>
+        
+        <button onclick="submitData()" class="w-full bg-[#82c99b] text-white py-4 rounded-xl shadow-md hover:bg-[#6ab383] active:transform active:scale-95 transition-all text-2xl flex justify-center items-center">
+            <span id="submit-text">최종 제출하기</span>
+            <div id="submit-spinner" class="hidden ml-2 w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        </button>
+    </div>
+
+    <!-- 4. 최종 완료 화면 -->
+    <div id="screen-final" class="screen">
+        <div class="text-center mb-4 mt-4">
+            <h2 class="text-4xl text-green-600 mb-2 drop-shadow-sm">탐험 완료! 👏</h2>
+            <p class="text-gray-600 text-lg mb-4">우리 학교의 다양한 식물들과<br>더욱 친해진 것을 축하합니다.</p>
+            
+            <!-- 식물 다양성 코멘트 추가 -->
+            <div class="bg-[#f0f9f4] rounded-xl p-4 border border-green-200 text-left mb-2 shadow-sm">
+                <p class="text-gray-700 text-base leading-relaxed">
+                    <strong class="text-green-800 text-lg block mb-2">우리 학교에 이렇게 다양한 식물이 있단 걸 알았죠? 🌳</strong>
+                    우리 학교라는 작은 공간에도 이렇게 수많은 생명이 숨 쉬고 있답니다. 그렇다면 드넓은 지구에는 얼마나 더 많은 종이 함께 살아가고 있을까요?<br><br>
+                    이렇게 다양한 생물들이 어우러져 사는 것을 <strong>'생물 다양성'</strong>이라고 해요. 다양한 종이 각자의 역할을 다할 때, 지구의 생태계는 무너지지 않고 훨씬 더 건강하게 오래오래 유지될 수 있답니다. 오늘 만난 식물들처럼, 지구에 함께 사는 모든 생명을 소중히 여기는 탐험대원이 되어주세요! 🌍💚
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex-1 bg-white rounded-2xl shadow-sm overflow-hidden border border-green-200 flex flex-col relative">
+            <div class="p-3 bg-[#eaf5e9] border-b border-green-200">
+                <h3 class="text-green-800 text-center text-xl">🗺️ 우리학교 나무 지도</h3>
+            </div>
+            <img src="https://lh3.googleusercontent.com/d/13KwhoI2-sjta6BFBLozOJTww-dhoOccs" 
+                 alt="우리학교 나무 지도" 
+                 class="w-full h-full object-contain bg-[#f8fcf9]" 
+                 onerror="this.src='https://placehold.co/800x1200/d1fae5/065f46?text=School+Tree+Map'">
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 복사한 구글 앱스스크립트 URL을 아래 따옴표 안에 붙여넣으세요!
+    const SCRIPT_URL = "여기에_앱스스크립트_URL_입력"; 
+
+    let userInfo = { id: '', name: '', essay: '' };
+    let currentQuizIndex = 0;
+    
+    // Alert을 대체하는 토스트 메시지 함수
+    function showToast(message, isSuccess = false, duration = 2000) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        if (isSuccess) {
+            toast.classList.add('success');
+        } else {
+            toast.classList.remove('success');
+        }
+        
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, duration);
+    }
+
+    // 맞춤법이 틀려도 맞도록 aliases(별칭)를 넉넉하게 추가했습니다.
+    const quizData = [
+        {
+            answer: "배롱나무",
+            aliases: ["배롱나무", "베롱나무", "배롱", "베롱", "백일홍", "백일홍나무"],
+            location: "급식실 나오면 바로 보이는 핑크 꽃나무",
+            desc: "여름 내내 화사한 분홍빛 꽃을 오랫동안 피워내는 매력적인 나무예요.",
+            hint: "ㅂ ㄹ ㄴ ㅁ",
+            img: "https://lh3.googleusercontent.com/d/1cUaG-yj9agKK02tWSepsFgZx1qKy_Oos"
+        },
+        {
+            answer: "수수꽃다리",
+            aliases: ["수수꽃다리", "수수꽃", "라일락", "나일락", "수수꼬다리"],
+            location: "본관과 후관 사이 중앙 화단",
+            desc: "봄이 오면 달콤하고 향기로운 냄새를 교정 가득 풍기는 아름다운 꽃나무랍니다.",
+            hint: "ㅅ ㅅ ㄲ ㄷ ㄹ",
+            img: "https://lh3.googleusercontent.com/d/1YPv2DGtq9Rr75DkxFF8iDiRejJ2low4v"
+        },
+        {
+            answer: "맥문동",
+            aliases: ["맥문동", "맹문동", "맥문", "백문동", "보라꽃"],
+            location: "본관과 후관 사이 은은한 보라꽃",
+            desc: "나무 아래 그늘에서도 씩씩하게 잘 자라며, 길쭉한 잎 사이로 예쁜 보라색 꽃을 피우는 풀꽃이에요.",
+            hint: "ㅁ ㅁ ㄷ",
+            img: "https://lh3.googleusercontent.com/d/1c2fVBdHIlCmvoTerPbuotXwwAMD7pwZM"
+        },
+        {
+            answer: "주목",
+            aliases: ["주목", "주목나무", "빨간열매나무"],
+            location: "교내 곳곳에 있는 빨간 열매 달린 키작은 나무",
+            desc: "'살아서 천 년, 죽어서 천 년'이라는 멋진 별명을 가진 나무예요. 가을이면 앙증맞은 빨간 열매가 열린답니다.",
+            hint: "ㅈ ㅁ",
+            img: "https://lh3.googleusercontent.com/d/1SXZGDW5BFEPn4SFtyaBi5fZUvAw3IKfc"
+        },
+        {
+            answer: "느티나무",
+            aliases: ["느티나무", "느티"],
+            location: "우리 학교 축구골대 뒤 편",
+            desc: "마을 어귀에서 시원한 그늘을 만들어주듯, 우리 학교 운동장에서도 듬직하게 서 있는 큰 나무랍니다.",
+            hint: "ㄴ ㅌ ㄴ ㅁ",
+            img: "https://lh3.googleusercontent.com/d/19AYT1pHM9JRhtOlAe3q7hQtnVVC5ibyO"
+        },
+        {
+            answer: "대추나무",
+            aliases: ["대추나무", "대추", "데추나무"],
+            location: "운동장 급수대 근처",
+            desc: "가을이 되면 달콤하고 단단한 붉은 열매를 맺어요. 차례상이나 제사상에 꼭 올라가는 과일이며, 약밥 같은 전통 음식에도 맛있게 들어가는 고마운 나무랍니다.",
+            hint: "ㄷ ㅊ ㄴ ㅁ",
+            img: "https://lh3.googleusercontent.com/d/1AoHUNspa5fkqkQH0TFOgEViTRalgalbD"
+        },
+        {
+            answer: "메타세콰이어",
+            aliases: ["메타세콰이어", "메타세쿼이아", "메타세쿼이어", "메타세콰이아", "메타", "메타나무"],
+            location: "후관에서 보면 담장 너머 산책로에 있는 키 큰 나무",
+            desc: "하늘을 향해 뾰족하고 곧게 뻗어 자라는 나무로, 공룡 시대부터 살아남은 신비로운 화석 나무랍니다.",
+            hint: "ㅁ ㅌ ㅅ ㅋ ㅇ ㅇ",
+            img: "https://lh3.googleusercontent.com/d/1_BiJBFuicDZqwGBP7bO56je97kbL71pV"
+        }
+    ];
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    let audioCtx = null;
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playSuccessSound() {
+        initAudio();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+        oscillator.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3); // C6 경쾌함 추가
+        
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function playFinalSound() {
+        initAudio();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        
+        notes.forEach((freq, index) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'triangle';
+            const startTime = audioCtx.currentTime + (index * 0.15);
+            osc.frequency.setValueAtTime(freq, startTime);
+            
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.5, startTime + 0.05);
+            
+            if (index === notes.length - 1) {
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 1.5);
+                osc.start(startTime);
+                osc.stop(startTime + 1.5);
+            } else {
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+                osc.start(startTime);
+                osc.stop(startTime + 0.15);
+            }
+        });
+    }
+
+    function startQuiz() {
+        initAudio(); 
+        const idInput = document.getElementById('student-id').value.trim();
+        const nameInput = document.getElementById('student-name').value.trim();
+
+        // alert 대신 toast 사용
+        if (!/^\d{5}$/.test(idInput)) {
+            showToast('학번은 숫자 5자리로 정확히 입력해주세요.');
+            document.getElementById('student-id').focus();
+            return;
+        }
+        if (nameInput === '') {
+            showToast('이름을 입력해주세요.');
+            document.getElementById('student-name').focus();
+            return;
+        }
+
+        userInfo.id = idInput;
+        userInfo.name = nameInput;
+        
+        loadQuiz(0);
+        showScreen('screen-quiz');
+    }
+
+    function loadQuiz(index) {
+        const data = quizData[index];
+        document.getElementById('quiz-progress').textContent = `${index + 1} / ${quizData.length}`;
+        document.getElementById('quiz-image').src = data.img;
+        document.getElementById('quiz-location').textContent = data.location;
+        document.getElementById('quiz-desc').textContent = data.desc;
+        document.getElementById('quiz-hint').textContent = data.hint;
+        
+        const answerInput = document.getElementById('quiz-answer');
+        answerInput.value = '';
+        answerInput.placeholder = '정답을 입력하세요';
+        // 토스트 알림 후 포커스 유지를 위해 약간 지연
+        setTimeout(() => answerInput.focus(), 100);
+    }
+
+    function checkAnswer() {
+        const inputRaw = document.getElementById('quiz-answer').value;
+        const inputStr = inputRaw.replace(/\s+/g, '').toLowerCase(); // 공백 제거 및 소문자화 (맞춤법 관대하게)
+        
+        if(inputStr === '') return;
+
+        const data = quizData[currentQuizIndex];
+        const isCorrect = data.aliases.some(alias => inputStr === alias.replace(/\s+/g, '').toLowerCase());
+
+        if (isCorrect) {
+            playSuccessSound();
+            showToast("경쾌한 정답입니다! 🎉", true, 1500); // 성공 토스트
+            
+            currentQuizIndex++;
+            
+            // 토스트 메시지를 볼 수 있도록 약간의 지연 후 다음 문제 로드
+            setTimeout(() => {
+                if (currentQuizIndex < quizData.length) {
+                    loadQuiz(currentQuizIndex);
+                } else {
+                    showScreen('screen-essay');
+                }
+            }, 1200);
+
+        } else {
+            const inputEl = document.getElementById('quiz-answer');
+            inputEl.classList.remove('shake');
+            void inputEl.offsetWidth;
+            inputEl.classList.add('shake');
+            inputEl.value = '';
+            inputEl.placeholder = '다시 시도해보세요!';
+            showToast("앗, 조금 틀린 것 같아요!", false, 1000);
+        }
+    }
+
+    document.getElementById('quiz-answer').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            checkAnswer();
+        }
+    });
+
+    async function submitData() {
+        const essayText = document.getElementById('essay-text').value.trim();
+        if (essayText === '') {
+            showToast('소감을 조금이라도 적어주세요!');
+            return;
+        }
+        userInfo.essay = essayText;
+
+        const btnText = document.getElementById('submit-text');
+        const spinner = document.getElementById('submit-spinner');
+        const btn = btnText.parentElement;
+        
+        btn.disabled = true;
+        btnText.textContent = '제출 중...';
+        spinner.classList.remove('hidden');
+
+        try {
+            if(SCRIPT_URL !== "https://script.google.com/macros/s/AKfycby3IUeOMsVXKFjz70wxj6q316_o3ep_KxTGEAjRHNYE14XRsh2hawmU2YzJR63m3QRB7A/exec") {
+                const formData = new URLSearchParams();
+                formData.append('id', userInfo.id);
+                formData.append('name', userInfo.name);
+                formData.append('essay', userInfo.essay);
+
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                });
+            } else {
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            playFinalSound();
+            showScreen('screen-final');
+            
+        } catch (error) {
+            showToast('오류가 발생했습니다. 네트워크 상태를 확인해주세요.');
+        } finally {
+            btn.disabled = false;
+            btnText.textContent = '최종 제출하기';
+            spinner.classList.add('hidden');
+        }
+    }
+</script>
+</body>
+</html>
