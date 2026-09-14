@@ -204,8 +204,8 @@
 </div>
 
 <script>
-    // 복사한 구글 앱스스크립트 URL을 아래 따옴표 안에 붙여넣으세요!
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3IUeOMsVXKFjz70wxj6q316_o3ep_KxTGEAjRHNYE14XRsh2hawmU2YzJR63m3QRB7A/exec"; 
+    // 여기에 얻으신 진짜 URL을 넣습니다. (따옴표 유지)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQF4Hk08LicNFyq9o18M177qOsW3dZYMd4VpeunECP538PSNhJ-SgUI50wp0ED7oFmtw/exec"; 
 
     let userInfo = { id: '', name: '', essay: '' };
     let currentQuizIndex = 0;
@@ -232,7 +232,7 @@
             answer: "배롱나무",
             aliases: ["배롱나무", "베롱나무", "배롱", "베롱", "백일홍", "백일홍나무"],
             location: "급식실 나오면 바로 보이는 핑크 꽃나무",
-            desc: "예로부터 이 나무의 꽃이 백일 간다고 하여 '백일홍'이라고 불렀어요. 여름 내내 화사한 분홍빛 꽃을 오랫동안 피워내는 매력적인 나무예요. 지금도 화려한 꽃분홍 꽃이 가지에 피어있어요.",
+            desc: "여름 내내 화사한 분홍빛 꽃을 오랫동안 피워내는 매력적인 나무예요.",
             hint: "ㅂ ㄹ ㄴ ㅁ",
             img: "https://lh3.googleusercontent.com/d/1cUaG-yj9agKK02tWSepsFgZx1qKy_Oos"
         },
@@ -240,7 +240,7 @@
             answer: "수수꽃다리",
             aliases: ["수수꽃다리", "수수꽃", "라일락", "나일락", "수수꼬다리"],
             location: "본관과 후관 사이 중앙 화단",
-            desc: " 라일락속에 속하는 중에서도 이 나무는 꽃향기가 풍부하고 수형이 아름다워 세계적으로 높은 평가를 받는대요.",
+            desc: "봄이 오면 달콤하고 향기로운 냄새를 교정 가득 풍기는 아름다운 꽃나무랍니다.",
             hint: "ㅅ ㅅ ㄲ ㄷ ㄹ",
             img: "https://lh3.googleusercontent.com/d/1YPv2DGtq9Rr75DkxFF8iDiRejJ2low4v"
         },
@@ -248,7 +248,7 @@
             answer: "맥문동",
             aliases: ["맥문동", "맹문동", "맥문", "백문동", "보라꽃"],
             location: "본관과 후관 사이 은은한 보라꽃",
-            desc: "나무 아래 그늘에서도 씩씩하게 잘 자라며, 길쭉한 잎 사이로 예쁜 보라색 꽃을 피우는 풀꽃이에요. 한방에서는 강장·거담·진해·강심제 등에 사용해요",
+            desc: "나무 아래 그늘에서도 씩씩하게 잘 자라며, 길쭉한 잎 사이로 예쁜 보라색 꽃을 피우는 풀꽃이에요.",
             hint: "ㅁ ㅁ ㄷ",
             img: "https://lh3.googleusercontent.com/d/1c2fVBdHIlCmvoTerPbuotXwwAMD7pwZM"
         },
@@ -264,7 +264,7 @@
             answer: "느티나무",
             aliases: ["느티나무", "느티"],
             location: "우리 학교 축구골대 뒤 편",
-            desc: "마을 어귀에서 시원한 그늘을 만들어주듯, 우리 학교 운동장 한 켠에서도 듬직하게 서 있는 큰 나무랍니다.",
+            desc: "마을 어귀에서 시원한 그늘을 만들어주듯, 우리 학교 운동장에서도 듬직하게 서 있는 큰 나무랍니다.",
             hint: "ㄴ ㅌ ㄴ ㅁ",
             img: "https://lh3.googleusercontent.com/d/19AYT1pHM9JRhtOlAe3q7hQtnVVC5ibyO"
         },
@@ -272,7 +272,7 @@
             answer: "대추나무",
             aliases: ["대추나무", "대추", "데추나무"],
             location: "운동장 급수대 근처",
-            desc: "가을이 되면 달콤하고 단단한 붉은 열매를 맺어요. 벼락을 맞은 이 나무는 귀하기에 도장이나 염주 재료로도 쓰여요.",
+            desc: "가을이 되면 달콤하고 단단한 붉은 열매를 맺어요. 차례상이나 제사상에 꼭 올라가는 과일이며, 약밥 같은 전통 음식에도 맛있게 들어가는 고마운 나무랍니다.",
             hint: "ㄷ ㅊ ㄴ ㅁ",
             img: "https://lh3.googleusercontent.com/d/1AoHUNspa5fkqkQH0TFOgEViTRalgalbD"
         },
@@ -445,23 +445,20 @@
         spinner.classList.remove('hidden');
 
         try {
-            if(SCRIPT_URL !== "https://script.google.com/macros/s/AKfycbyQF4Hk08LicNFyq9o18M177qOsW3dZYMd4VpeunECP538PSNhJ-SgUI50wp0ED7oFmtw/exec") {
-                const formData = new URLSearchParams();
-                formData.append('id', userInfo.id);
-                formData.append('name', userInfo.name);
-                formData.append('essay', userInfo.essay);
+            // 문제가 되던 if 조건문을 완전히 삭제하고 바로 전송하도록 수정했습니다.
+            const formData = new URLSearchParams();
+            formData.append('id', userInfo.id);
+            formData.append('name', userInfo.name);
+            formData.append('essay', userInfo.essay);
 
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: formData,
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-                });
-            } else {
-                await new Promise(r => setTimeout(r, 1000));
-            }
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
 
             playFinalSound();
             showScreen('screen-final');
